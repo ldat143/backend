@@ -3,20 +3,14 @@ import json
 import re
 import agentops
 
-from fastapi.responses import JSONResponse
-from fastapi import status
 from dotenv import load_dotenv
 from crewai import Agent, Task, Crew, Process, LLM
 from crewai_tools import SerperDevTool
 from tools.custom_tools import DistanceCalculatorTool, CompetitorVerifierTool
 
 load_dotenv()
-
-
 agentops.init(api_key="97e22f99-24ef-4233-8e39-83f04574dc96")
 
-# Configurar el modelo LLM
-    #model='gemini/gemini-2.0-flash-lite',
 
 llm = LLM(
     model='gemini/gemini-2.0-flash-lite',   
@@ -26,7 +20,7 @@ llm = LLM(
 )
 
 # Herramientas
-serper = SerperDevTool(n_results=5)
+serper = SerperDevTool()
 distance_tool = DistanceCalculatorTool()
 verifier_tool = CompetitorVerifierTool()
 
@@ -36,8 +30,7 @@ dealership_info_agent = Agent(
     goal="Collect key information about the target car dealership {dealership} with a zipcode {zipcode}.",
     backstory="Expert researcher skilled at finding dealership details.",
     llm=llm,
-    verbose=True,
-    max_iter=5
+    verbose=True
 )
 
 competitor_researcher = Agent(
@@ -45,8 +38,7 @@ competitor_researcher = Agent(
     goal="Identify competitor car dealerships for {dealership}.",
     backstory="Market research specialist focused on car dealerships.",
     llm=llm,
-    verbose=True,
-    max_iter=5
+    verbose=True
 )
 
 data_organizer = Agent(
@@ -54,8 +46,7 @@ data_organizer = Agent(
     goal="Structure competitor data into a table with dealership info.",
     backstory="Data analyst experienced in formatting and cleaning information.",
     llm=llm,
-    verbose=True,
-    max_iter=5
+    verbose=True
 )
 
 results_supervisor = Agent(
@@ -63,8 +54,7 @@ results_supervisor = Agent(
     goal="Validate dealership and competitor data for accuracy and quality.",
     backstory="Quality assurance expert reviewing all information.",
     llm=llm,
-    verbose=True,
-    max_iter=5
+    verbose=True
 )
 
 # Tareas
@@ -77,25 +67,25 @@ dealership_info_task = Task(
 
 competitor_research_task = Task(
     description=(
-        "Search for car dealerships that sell the same OEM as {dealership}, located within {range} miles. "
+        "Search for car dealerships that sell the same OEM as {dealership}, located within 100 miles. "
         "Return exactly 5 competitors in JSON format with the following fields for each: "
-        "name, website, distance (in miles), city, state, latitude, longitude, range."
+        "name, website, distance (in miles), city, state, latitude, longitude."
     ),
     expected_output=(
         'List of 5 competitors as JSON objects: '
         '[{"name": "...", "website": "...", "distance": "...", "city": "...", '
-        '"state": "...", "latitude": "...", "longitude": "...", "range": "..."}, ...]'
+        '"state": "...", "latitude": "...", "longitude": "..."}, ...]'
     ),
     agent=competitor_researcher,
     tools=[serper, distance_tool]
 )
 
 data_organization_task = Task(
-    description="Organize competitor data as JSON list.",
+    description="Organize competitor data into a structured table.",
     expected_output=(
     'Return the same 5 competitors as JSON list: '
     '[{"name": "...", "website": "...", "distance": "...", "city": "...", '
-    '"state": "...", "latitude": "...", "longitude": "...", "range": "..."}, ...]'
+    '"state": "...", "latitude": "...", "longitude": "..."}, ...]'
 ),
     agent=data_organizer
 )
@@ -105,7 +95,7 @@ supervision_task = Task(
     expected_output=(
     'Validate and return the final list of 5 competitors in this exact JSON format: '
     '[{"name": "...", "website": "...", "distance": "...", "city": "...", '
-    '"state": "...", "latitude": "...", "longitude": "...", "range": "..."}, ...]'
+    '"state": "...", "latitude": "...", "longitude": "..."}, ...]'
 ),
     agent=results_supervisor,
     tools=[verifier_tool]
