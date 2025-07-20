@@ -1,0 +1,10 @@
+crewai
+crewai-tools
+geopy
+langchain_google_genai
+google-adk
+requests
+beautifulsoup4
+langchain-community
+duckduckgo-search
+fastapi
