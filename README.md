@@ -3,7 +3,18 @@
 This project implements a **FastAPI-based REST API** that uses AI agents (CrewAI + Gemini) to analyze car dealerships in the U.S. The API provides two main features:
 
 1. **Identify local competitors based on the dealership OEM and proximity**
-2. **Discover locations(Cities or metro areas) considered as opportunities to target in the SEO strategy**  
+2. **Discover locations(Cities or metro areas) considered as opportunities to target in the SEO strategy**
+
+## Clean DEMO
+In case you want to see the main Crew AI agents workflow, please redirect to:
+https://colab.research.google.com/drive/1YCzJHMyb17uFKH6kUlb5OQehIinMXOSO?usp=sharing 
+
+Please, note that you'll need:
+- GEMINI_API_KEY
+- GOOGLE_MAP_API_KEY
+- SERPER_API_KEY
+
+# Backend functionalities
 
 ## 🧠 Main Features
 
