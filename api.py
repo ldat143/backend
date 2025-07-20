@@ -4,18 +4,25 @@ from pydantic import BaseModel
 from crews.competitor_crew import run_competitor_crew
 from crews.opportunity_crew import run_opportunity_crew
 from dotenv import load_dotenv
+from fastapi.middleware.cors import CORSMiddleware
+
 import tempfile
 import json
 
 load_dotenv()
 app = FastAPI()
-
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 class CrewInput(BaseModel):
     zipcode: str
     dealership: str
     customer: str
     person: str
-    range:str
 
 @app.post("/run-competitor")
 async def competitor(data: CrewInput):
