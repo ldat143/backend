@@ -2,7 +2,6 @@ import os
 import json
 import re
 import agentops
-
 from dotenv import load_dotenv
 from crewai import Agent, Task, Crew, Process, LLM
 from crewai_tools import SerperDevTool
@@ -12,9 +11,6 @@ from tools.custom_tools import DistanceCalculatorTool, PopulationDataTool
 load_dotenv()
 agentops.init(api_key="97e22f99-24ef-4233-8e39-83f04574dc96")
 
-# Configurar el modelo LLM
-    #model='gemini/gemini-2.0-flash-lite',
-
 llm = LLM(
     model='gemini/gemini-2.0-flash-lite',
     api_key=os.environ["GEMINI_API_KEY"],
@@ -23,7 +19,7 @@ llm = LLM(
 )
 
 # Herramientas
-serper = SerperDevTool(n_results=5)
+serper = SerperDevTool()
 distance_tool = DistanceCalculatorTool()
 population_tool = PopulationDataTool()
 
@@ -33,26 +29,23 @@ dealership_info_agent = Agent(
     goal="Collect key information about the target car dealership {dealership} with a zipcode {zipcode}.",
     backstory="Expert researcher skilled at finding dealership details.",
     llm=llm,
-    verbose=True,
-    max_iter=5
+    verbose=True
 )
 
 opportunities_researcher = Agent(
     role="Opportunities Researcher",
-    goal="Using the dealership's {dealership} info, identify cities within {range} miles with population > 1000.",
+    goal="Using the dealership's {dealership} info, identify cities within 100 miles with population > 1000.",
     backstory="Market research specialist for geographic business expansion.",
     llm=llm,
-    verbose=True,
-    max_iter=5
+    verbose=True
 )
 
 data_organizer = Agent(
     role="Data Organizer",
-    goal="Structure opportunity data into as a JSON list.",
+    goal="Structure opportunity data into a readable table.",
     backstory="Data analyst experienced in formatting and cleaning information.",
     llm=llm,
-    verbose=True,
-    max_iter=5
+    verbose=True
 )
 
 results_supervisor = Agent(
@@ -60,8 +53,7 @@ results_supervisor = Agent(
     goal="Validate all opportunity data and present final structured output.",
     backstory="Quality assurance expert reviewing all opportunity recommendations.",
     llm=llm,
-    verbose=True,
-    max_iter=5
+    verbose=True
 )
 
 # Tareas
@@ -75,8 +67,8 @@ dealership_info_task = Task(
 opportunities_research_task = Task(
     description=(
         "Using the OEM, address, state and location of the dealership {dealership}, look for nearby cities and/or metro areas "
-        "within a {range}-mile radius and with population greater than 1000 people. "
-        "Use SerperDevTool to find city names, their states and addresses."
+        "within a 100-mile radius and with population greater than 1000 people. "
+        "Use SerperDevTool to find city names, their states and addresses. "
         "Use PopulationDataTool to verify each city has a population > 1000. "
         "Use DistanceCalculatorTool for distances in miles. "
         "Return a list of valid cities with their City/Town Name, Distance from dealer, and State."
@@ -84,7 +76,7 @@ opportunities_research_task = Task(
     expected_output=(
     'Return a JSON list of up to 5 cities like this:\n'
     '[{"distance": "string", "city": "string", "state": "string", '
-    '"latitude": "float", "longitude": "float", "range": "float"}]'
+    '"latitude": "float", "longitude": "float"}]'
 ),
     agent=opportunities_researcher,
     tools=[serper, distance_tool, population_tool]
@@ -94,7 +86,7 @@ data_organization_task = Task(
     description="Take the list of nearby cities and organize the data into a markdown table.",
     expected_output=(
     'Format and return the same 5 cities as JSON: '
-    '[{"distance": "...", "city": "...", "state": "...", "latitude": "...", "longitude": "...", "range": "..."}, ...]'
+    '[{"distance": "...", "city": "...", "state": "...", "latitude": "...", "longitude": "..."}, ...]'
 ),
     agent=data_organizer
 )
@@ -103,7 +95,7 @@ supervision_task = Task(
     description="Review the dealership info and nearby city suggestions, and present the results clearly.",
     expected_output=(
     'Final validated list of 5 cities in the following JSON format: '
-    '[{"distance": "...", "city": "...", "state": "...", "latitude": "...", "longitude": "...", "range": "..."}, ...]'
+    '[{"distance": "...", "city": "...", "state": "...", "latitude": "...", "longitude": "..."}, ...]'
 ),
     agent=results_supervisor
 )
@@ -117,6 +109,9 @@ opportunity_crew = Crew(
 )
 
 # Función para ejecutar desde main.py
+
+
+
 def run_opportunity_crew(**kwargs):
     raw_output = opportunity_crew.kickoff(inputs=kwargs)
 
